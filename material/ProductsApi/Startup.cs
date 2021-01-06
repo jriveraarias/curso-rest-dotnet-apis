@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-
+///
 namespace ProductsApi
 {
     public class Startup
@@ -26,8 +26,21 @@ namespace ProductsApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            ///midleware
-            services.AddSingleton<object[]>(new[] { new Models.Product { Id = 1, Name = "Pants" } });
+            // Middleware
+            services.AddSingleton<Repositories.ProductRepository>();
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy(name: "CORS",
+                                  builder =>
+                                  {
+                                      builder.WithOrigins("https://localhost:80")
+                                             .AllowAnyHeader()
+                                             .AllowAnyMethod() // GET, POST, PUT, etc
+                                             .AllowCredentials();
+                                  });
+            });
+
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -41,9 +54,11 @@ namespace ProductsApi
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ProductsApi v1"));
             }
+
+            app.UseCors("CORS");
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ProductsApi v1"));
 
             app.UseHttpsRedirection();
 
